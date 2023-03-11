@@ -27,8 +27,8 @@
 | docker ps                              | 查看容器列表 | 容器 | -a 列出所有，包括未运行的 |
 | docker run -d [--name test] $imageId | 创建容器     | 容器 | -d 后台运行               |
 | docker rm $containerId                 | 删除容器     | 容器 | -f --force 强制删除       |
-|                                        |              |      |                           |
-|                                        |              |      |                           |
+| docker exec -it $containerId bash      | 进入容器     | 容器 | 也可指定容器name进入      |
+| docker top $containerId                | 查看容器进程 | 容器 | PID                       |
 
 # 设置仓库
 
