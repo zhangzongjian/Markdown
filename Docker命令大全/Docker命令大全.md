@@ -22,13 +22,18 @@
 | docker inspect $imageId                        | 查看镜像元数据     | 镜像 |                                            |
 | docker history $imageId                        | 查看镜像构建历史   | 镜像 | --no-trunc显示详细                         |
 
-| 命令                                   | 描述         | 类型 | 备注                      |
-| -------------------------------------- | ------------ | ---- | ------------------------- |
-| docker ps                              | 查看容器列表 | 容器 | -a 列出所有，包括未运行的 |
-| docker run -d [--name test] $imageId | 创建容器     | 容器 | -d 后台运行               |
-| docker rm $containerId                 | 删除容器     | 容器 | -f --force 强制删除       |
-| docker exec -it $containerId bash      | 进入容器     | 容器 | 也可指定容器name进入      |
-| docker top $containerId                | 查看容器进程 | 容器 | PID                       |
+| 命令                                                       | 描述             | 类型 | 备注                      |
+| ---------------------------------------------------------- | ---------------- | ---- | ------------------------- |
+| docker ps                                                  | 查看容器列表     | 容器 | -a 列出所有，包括未运行的 |
+| docker run -d [--name test] $imageId                     | 创建容器         | 容器 | -d 后台运行               |
+| docker rm $containerId                                     | 删除容器         | 容器 | -f --force 强制删除       |
+| docker kill $containerId                                   | 杀掉容器进程     | 容器 | 同stop，容器id还在        |
+| docker exec -it $containerId bash                          | 进入容器         | 容器 | 也可指定容器name进入      |
+| docker exec -it $containerId COMMAND                       | 执行容器内的命令 | 容器 |                           |
+| docker top $containerId                                    | 查看容器进程     | 容器 | PID                       |
+| docker stop/start/restart $containerId                     | 启停容器         | 容器 |                           |
+| docker attach $containerId                                 | 容器前台运行     | 容器 | 同Linux的fg命令           |
+| docker events --since="2022-03-12" --filter image=$imageId | 查看容器事件     | 容器 | docker events实时监听     |
 
 # 设置仓库
 
