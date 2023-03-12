@@ -67,10 +67,14 @@
 
 ## Dockerfile
 
-docker build
+`docker cp + docker exec 也能达到Dockerfile效果，但是效率低`
 
-docker save
+样例：
 
-docker export
+## docker build
 
-docker commit
+## docker save/load
+
+## docker export/import
+
+## docker commit
