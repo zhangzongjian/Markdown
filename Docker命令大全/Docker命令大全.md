@@ -1,10 +1,12 @@
 # 常用命令
 
+
 | 命令                     | 描述           | 类型 | 备注 |
 | ------------------------ | -------------- | ---- | ---- |
 | systemctl daemon-reload  | 重载服务配置   | 服务 |      |
 | systemctl restart docker | 重启docker服务 | 服务 |      |
 | docker info              | 显示docker信息 | 服务 |      |
+
 
 | 命令                                           | 描述               | 类型 | 备注                            |
 | ---------------------------------------------- | ------------------ | ---- | ------------------------------- |
@@ -20,10 +22,11 @@
 | docker inspect $imageId                        | 查看镜像元数据     | 镜像 |                                 |
 | docker history $imageId                        | 查看镜像构建历史   | 镜像 | --no-trunc显示详细              |
 
+
 | 命令                                         | 描述                     | 类型 | 备注                                                |
 | -------------------------------------------- | ------------------------ | ---- | --------------------------------------------------- |
 | docker ps                                    | 查看容器列表             | 容器 | -a 列出所有，包括未运行的                           |
-| docker run -itd [--name test] $imageId     | 创建容器，后台运行       | 容器 | -d 后台运行，类似命令&执行；-it 类似nohup退出就停了 |
+| docker run -itd [--name test] $imageId     | 创建容器，并后台运行     | 容器 | -d 后台运行，类似命令&执行；-it 类似nohup退出就停了 |
 | docker rm $containerId                       | 删除容器                 | 容器 | -f --force 强制删除                                 |
 | docker kill $containerId                     | 杀掉容器进程             | 容器 | 同stop，容器id还在                                  |
 | docker exec -it $containerId bash            | 进入容器                 | 容器 | 也可指定容器name进入                                |
