@@ -70,11 +70,35 @@
 
 ## Dockerfile
 
-`docker cp + docker exec 也能达到Dockerfile效果，但是效率低`
+docker build 构建镜像专用文件，固定文件名
 
-样例：
+`docker cp + docker exec + docker commit 也能达到Dockerfile效果，但是效率低，而且需要启动容器（对比效果，以及镜像大小）`
+
+样例：[https://github.com/creack/docker-firefox/blob/master/Dockerfile](https://github.com/creack/docker-firefox/blob/master/Dockerfile)
+
+```
+# Firefox over VNC
+#
+# VERSION               0.1
+# DOCKER-VERSION        0.2
+
+from	ubuntu:12.04
+# make sure the package repository is up to date
+run	echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
+run	apt-get update
+
+# Install vnc, xvfb in order to create a 'fake' display and firefox
+run	apt-get install -y x11vnc xvfb firefox
+run	mkdir /.vnc
+# Setup a password
+run	x11vnc -storepasswd 1234 ~/.vnc/passwd
+# Autostart firefox (might not be the best way to do it, but it does the trick)
+run	bash -c 'echo "firefox" >> /.bashrc'
+```
 
 ## docker build
+
+指定镜像创建容器，执行一系列Dockerfile指令，最后commit保存为镜像。执行完并没有容器保留。
 
 ## docker save/load
 
