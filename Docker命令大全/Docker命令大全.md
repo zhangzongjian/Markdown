@@ -1,15 +1,20 @@
+[TOP]
+
 # 常用命令
 
-| 命令                     | 描述           | 类型 | 备注 |
-| ------------------------ | -------------- | ---- | ---- |
-| systemctl daemon-reload  | 重载服务配置   | 服务 |      |
-| systemctl restart docker | 重启docker服务 | 服务 |      |
-| docker info              | 显示docker信息 | 服务 |      |
+
+| 命令                             | 描述           | 类型 | 备注 |
+| -------------------------------- | -------------- | ---- | ---- |
+| systemctl daemon-reload          | 重载服务配置   | 服务 |      |
+| systemctl restart docker         | 重启docker服务 | 服务 |      |
+| systemctl enable docker.service | 开机自启动     | 服务 |      |
+| docker info                      | 显示docker信息 | 服务 |      |
+
 
 | 命令                                           | 描述               | 类型 | 备注                            |
 | ---------------------------------------------- | ------------------ | ---- | ------------------------------- |
 | docker pull tomcat:10.0.7                      | 从仓库拉取镜像     | 镜像 | 类似git的pull/commit/push       |
-| docker images                                  | 查看本地镜像列表   | 镜像 |                                 |
+| docker images                                  | 查看本地镜像仓库   | 镜像 |                                 |
 | docker rmi $imageId                            | 删除本地镜像       | 镜像 | -f --force 强制删除             |
 | docker save $iamgeId > image.tar              | 保持镜像至归档文件 | 镜像 | 含镜像历史记录和元数据（含tag） |
 | docker save $iamgeId&#124; gzip > image.tar.gz | 保持镜像至归档文件 | 镜像 | gzip 将归档文件压小一点         |
@@ -20,10 +25,11 @@
 | docker inspect $imageId                        | 查看镜像元数据     | 镜像 |                                 |
 | docker history $imageId                        | 查看镜像构建历史   | 镜像 | --no-trunc显示详细              |
 
+
 | 命令                                         | 描述                     | 类型 | 备注                                              |
 | -------------------------------------------- | ------------------------ | ---- | ------------------------------------------------- |
 | docker ps                                    | 查看容器列表             | 容器 | -a 列出所有，包括未运行的                         |
-| docker run -itd [--name test] $imageId     | 创建容器，并后台运行     | 容器 | 参数要放$imageId前面                              |
+| docker run -itd [--name test] $imageId     | 创建容器，并后台运行     | 容器 | $imageId放最后，--restart=always退出自动拉起      |
 | docker rm $containerId                       | 删除容器                 | 容器 | -f --force 强制删除                               |
 | docker kill $containerId                     | 杀掉容器进程             | 容器 | 同stop，容器id还在                                |
 | docker exec -it $containerId bash            | 进入容器                 | 容器 | 也可指定容器name进入                              |
@@ -47,21 +53,55 @@
 
 # 设置仓库
 
+`/etc/docker/daemon.json`
+
 ```
 {
-    "registry-mirrors" : [
-        "https://pee6w651.mirror.aliyuncs.com",
-        "https://dockerhub.azk8s.cn",
-        "https://hub-mirror.c.163.com"
-    ]
+  "registry-mirrors" : [
+    "https://pee6w651.mirror.aliyuncs.com",
+    "https://dockerhub.azk8s.cn",
+    "https://hub-mirror.c.163.com"
+  ],
+  "insecure-registries" : [
+    "192.168.1.7:5000"
+  ]
 }
 ```
 
-设置后重启
+registry-mirrors     远程仓库拉取地址 pull
 
-`systemctl daemon-reload`
+insecure-registries  私有仓库推送地址 push
 
-`systemctl restart docker`
+设置后重启 `systemctl daemon-reload; systemctl restart docker`
+
+## 安装私有仓库
+
+### 官方镜像Registry方式（简陋）
+
+`docker pull docker.io/registry` 下载registry镜像
+
+`start_registry.sh` 启动私有仓库容器
+
+```
+docker rm registry --force 2>/dev/null
+docker run -d -p 5000:5000 --name=registry --restart=always \
+  --privileged=true \
+  --log-driver=none \
+  -v /root/registry/registrydata:/var/lib/registry \
+  registry:latest
+```
+
+`docker exec -it registry sh` 进入容器
+
+### docker-distribution方式（简陋）
+
+### Harbor服务器（WEB管理）
+
+## 推送镜像
+
+本地镜像标签格式: `服务器IP:端口/镜像名称:版本号`
+
+docker push `服务器IP:端口/镜像名称:版本号`
 
 # 查看镜像内容
 
