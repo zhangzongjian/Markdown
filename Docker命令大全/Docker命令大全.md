@@ -1,5 +1,3 @@
-[TOP]
-
 # 常用命令
 
 
@@ -70,7 +68,7 @@
 
 registry-mirrors     远程仓库拉取地址 pull
 
-insecure-registries  私有仓库推送地址 push
+insecure-registries  声明非安全(http)私有仓库 push
 
 设置后重启 `systemctl daemon-reload; systemctl restart docker`
 
@@ -93,9 +91,15 @@ docker run -d -p 5000:5000 --name=registry --restart=always \
 
 `docker exec -it registry sh` 进入容器
 
+`/etc/docker/registry/config.yml` 配置文件
+
 ### docker-distribution方式（简陋）
 
 ### Harbor服务器（WEB管理）
+
+### 查看私有仓库
+
+`curl http://localhost:5000/v2/_catalog`
 
 ## 推送镜像
 
@@ -103,15 +107,32 @@ docker run -d -p 5000:5000 --name=registry --restart=always \
 
 docker push `服务器IP:端口/镜像名称:版本号`
 
+> The push refers to repository [192.168.1.7:5000/opensuse]
+> Get "https://192.168.1.7:5000/v2/": http: server gave HTTP response to HTTPS client
+>
+> FAQ: /etc/docker/daemon.json设置insecure-registries解决
+
+# 挂载目录
+
+[参考资料] [https://michaelyou.github.io/2017/09/17/Docker%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86-Volume%EF%BC%8C-bind-mount%E5%92%8Ctmpfs-mount/](https://)
+
+![typesofmounts.png](assets/types-of-mounts.png)
+
+*volume* 挂载到宿主机docker管理的卷路径 `/var/lib/docker/volumes/`
+
+*bind mount* 挂载到宿主机任意目录
+
+*tmpfs mount* 挂载到宿主机内存
+
 # 查看镜像内容
 
 镜像包都是镜像分层的压缩文件
 
-![image.png](assets/image1.png)
+![image.png](assets/image.png)
 
 其实我们想看的是镜像文件系统，可以先创建容器，然后导出容器。vim即可查看内容
 
-![image1.png](assets/image.png)
+![image1.png](assets/image1.png)
 
 # 构建镜像
 
