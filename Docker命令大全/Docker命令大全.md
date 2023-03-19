@@ -138,7 +138,7 @@ http://192.168.1.7  admin/Harbor12345
 
 #### 重启harbor
 
-`docker-compose stop` `docker-compose start` 
+`docker-compose stop` `docker-compose start`
 
 docker修改配置重启后，harbor系列容器会挂掉，需要重启harbor
 
@@ -146,9 +146,15 @@ docker修改配置重启后，harbor系列容器会挂掉，需要重启harbor
 
 * http记得设置 `/etc/docker/daemon.json` insecure-registries
 * 需要先登录 `docker login -u admin -p Harbor12345 http://192.168.1.7`
+
   * 登录会话存放在 `/root/.docker/config.json`
 * 需要带上项目名称 `docker push 192.168.1.7/library/opensuse:tomcat`
+
   * harbor前台创建项目，library是harbor默认的项目
+
+#### Harbor API
+
+http://192.168.1.7/devcenter-api-2.0
 
 ### 查看私有仓库
 
