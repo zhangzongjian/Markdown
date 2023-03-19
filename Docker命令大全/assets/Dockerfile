@@ -13,9 +13,9 @@ volume  "/tmp/zzj" "/zzj"
 # 拷贝文件到容器
 copy    ${tomcat_pkg} /opt
 copy    ${jdk_pkg} /opt
-# 构建镜像执行的命令
-run     cd /opt ; tar -zxvf ${tomcat_pkg} >/dev/null ; rm ${tomcat_pkg}
-run     cd /opt && tar -zxvf ${jdk_pkg} >/dev/null ; rm ${jdk_pkg}
+# 构建镜像执行的命令，Dockerfile指令越多镜像层数越多，尽量一条run
+run     cd /opt ; tar -zxvf ${tomcat_pkg} >/dev/null ; rm ${tomcat_pkg} ; \
+        cd /opt && tar -zxvf ${jdk_pkg} >/dev/null ; rm ${jdk_pkg}
 # 容器健康检测指令
 healthcheck --interval=5s --timeout=5s --retries=2 CMD ["netstat -anp | grep 8080 -q"]
 # 暴露容器端口

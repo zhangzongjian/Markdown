@@ -48,6 +48,7 @@
 | docker export $containerId > filesystem.tar | 导出容器文件系统         | 容器 | 保存至归档文件，应用场景：制作基础镜像            |
 | docker import filesystem.tar [repo:tag]     | 导入归档文件至新镜像     | 容器 | 和export配套使用                                  |
 | docker rename old_name new_name             | 容器重命名               | 容器 |                                                   |
+| docker container prune                       | 清理stop状态容器         | 容器 |                                                   |
 
 # 设置仓库
 
@@ -84,14 +85,27 @@ insecure-registries 声明非安全(http)私有仓库 push
 
 ```
 docker rm registry --force 2>/dev/null
-docker run -d -p 5000:5000 --name=registry registry:latest
+docker run -d --name=registry --net=host registry:latest
 ```
 
 `docker exec -it registry sh` 进入容器
 
 `/etc/docker/registry/config.yml` 配置文件
 
+`/var/lib/registry` 默认存储目录
+
 ### docker-distribution方式（简陋）
+
+```
+wget http://mirror.centos.org/centos/7/extras/x86_64/Packages/docker-distribution-2.6.2-2.git48294d9.el7.x86_64.rpm
+rpm -ivh docker-distribution-2.6.2-2.git48294d9.el7.x86_64.rpm
+```
+
+`systemctl start docker-distribution.service` 启动私有仓库服务
+
+`/etc/docker-distribution/registry/config.yml` 配置文件
+
+`/var/lib/registry` 默认存储目录
 
 ### Harbor服务器（WEB管理）
 
