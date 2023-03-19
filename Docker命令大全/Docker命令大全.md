@@ -1,5 +1,6 @@
 # 常用命令
 
+
 | 命令                                         | 描述             | 类型 | 备注                                         |
 | -------------------------------------------- | ---------------- | ---- | -------------------------------------------- |
 | systemctl daemon-reload                      | 重载服务配置     | 服务 |                                              |
@@ -11,6 +12,7 @@
 | docker system events --since="2022-03-12"    | 查看docker事件   | 服务 | date -d @1678562863 时间戳转格式             |
 | docker system events --filter image=$imageId | 查看docker事件   | 服务 | date -d "2010-07-20 10:25:30" +%s 转时间戳   |
 | docker system prune                          | docker空间清理   | 服务 | 慎用                                         |
+
 
 | 命令                                           | 描述                   | 类型 | 备注                             |
 | ---------------------------------------------- | ---------------------- | ---- | -------------------------------- |
@@ -26,6 +28,7 @@
 | docker inspect $imageId                        | 查看镜像元数据         | 镜像 |                                  |
 | docker history $imageId                        | 查看镜像构建历史       | 镜像 | --no-trunc显示详细               |
 | docker image prune                             | 清理&#60;none&#62;镜像 | 镜像 | 无标签且没被使用的镜像           |
+
 
 | 命令                                         | 描述                     | 类型 | 备注                                              |
 | -------------------------------------------- | ------------------------ | ---- | ------------------------------------------------- |
@@ -75,15 +78,14 @@ insecure-registries 声明非安全(http)私有仓库 push
 
 ## 安装私有仓库
 
-[参考资料] [https://blog.csdn.net/mw5258/article/details/126291484](https://)
+[参考资料] [https://blog.csdn.net/mw5258/article/details/126291484](https://blog.csdn.net/mw5258/article/details/126291484)
 
 ### 官方镜像Registry方式（简陋）
 
 `docker pull docker.io/registry` 下载registry镜像
 
-`start_registry.sh` 启动私有仓库容器
-
 ```
+# 启动私有仓库容器
 docker rm registry --force 2>/dev/null
 docker run -d --name=registry --net=host registry:latest
 ```
@@ -109,9 +111,35 @@ rpm -ivh docker-distribution-2.6.2-2.git48294d9.el7.x86_64.rpm
 
 ### Harbor服务器（WEB管理）
 
+安装docker-compose（Harbor是使用docker-compose来管理的）
+
+```
+curl -SL https://github.com/docker/compose/releases/download/v2.16.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+```
+
+安装harbor
+
+```
+wget https://storage.googleapis.com/harbor-releases/release-2.4.0/harbor-offline-installer-v2.4.3.tgz
+tar -xzvf harbor-offline-installer-v2.4.3.tgz -C /usr/local/
+cd /usr/local/harbor
+sed '/^ *#/d' harbor.yml.tmpl | sed '/https/,/private_key/d'  > harbor.yml  # https配置干掉
+# hostname: 192.168.1.7 # 设置服务IP
+./install.sh
+```
+
+记得设置 `/etc/docker/daemon.json` insecure-registries
+
+访问web前台>> http://192.168.1.7  admin/Harbor12345
+
+`docker-compose restart` 重启harbor
+
 ### 查看私有仓库
 
 `curl http://192.168.1.7:5000/v2/_catalog`
+
+`curl -u 'admin:Harbor12345' http://192.168.1.7/v2/_catalog`
 
 ## 推送镜像
 
@@ -126,7 +154,7 @@ docker push `服务器IP:端口/镜像名称:版本号`
 
 # 数据管理/挂载目录
 
-[参考资料] [https://michaelyou.github.io/2017/09/17/Docker%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86-Volume%EF%BC%8C-bind-mount%E5%92%8Ctmpfs-mount/](https://)
+[参考资料] [https://michaelyou.github.io/2017/09/17/Docker%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86-Volume%EF%BC%8C-bind-mount%E5%92%8Ctmpfs-mount/](https://michaelyou.github.io/2017/09/17/Docker%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86-Volume%EF%BC%8C-bind-mount%E5%92%8Ctmpfs-mount/)
 
 ![typesofmounts.png](assets/types-of-mounts.png)
 
