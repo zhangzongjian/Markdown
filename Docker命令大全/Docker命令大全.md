@@ -65,7 +65,8 @@
     "https://hub-mirror.c.163.com"
   ],
   "insecure-registries" : [
-    "192.168.1.7:5000"
+    "192.168.1.7:5000",
+    "192.168.1.7:80"
   ]
 }
 ```
@@ -111,14 +112,16 @@ rpm -ivh docker-distribution-2.6.2-2.git48294d9.el7.x86_64.rpm
 
 ### Harbor服务器（WEB管理）
 
-安装docker-compose（Harbor是使用docker-compose来管理的）
+#### 安装docker-compose
+
+Harbor是使用docker-compose来管理的
 
 ```
 curl -SL https://github.com/docker/compose/releases/download/v2.16.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 ```
 
-安装harbor
+#### 安装harbor
 
 ```
 wget https://storage.googleapis.com/harbor-releases/release-2.4.0/harbor-offline-installer-v2.4.3.tgz
@@ -129,11 +132,23 @@ sed '/^ *#/d' harbor.yml.tmpl | sed '/https/,/private_key/d'  > harbor.yml  # ht
 ./install.sh
 ```
 
-记得设置 `/etc/docker/daemon.json` insecure-registries
+#### 访问web前台
 
-访问web前台>> http://192.168.1.7  admin/Harbor12345
+http://192.168.1.7  admin/Harbor12345
 
-`docker-compose restart` 重启harbor
+#### 重启harbor
+
+`docker-compose stop` `docker-compose start` 
+
+docker修改配置重启后，harbor系列容器会挂掉，需要重启harbor
+
+#### 推送镜像须知
+
+* http记得设置 `/etc/docker/daemon.json` insecure-registries
+* 需要先登录 `docker login -u admin -p Harbor12345 http://192.168.1.7`
+  * 登录会话存放在 `/root/.docker/config.json`
+* 需要带上项目名称 `docker push 192.168.1.7/library/opensuse:tomcat`
+  * harbor前台创建项目，library是harbor默认的项目
 
 ### 查看私有仓库
 
@@ -146,6 +161,8 @@ sed '/^ *#/d' harbor.yml.tmpl | sed '/https/,/private_key/d'  > harbor.yml  # ht
 本地镜像标签格式: `服务器IP:端口/镜像名称:版本号`
 
 docker push `服务器IP:端口/镜像名称:版本号`
+
+http推送会根据 `服务器IP:端口` 匹配是否配置了insecure-registries
 
 > The push refers to repository [192.168.1.7:5000/opensuse]
 > Get "https://192.168.1.7:5000/v2/": http: server gave HTTP response to HTTPS client
@@ -162,7 +179,7 @@ docker push `服务器IP:端口/镜像名称:版本号`
 
 挂载到宿主机docker管理的卷路径 `/var/lib/docker/volumes/`
 
-`docker volume create $volumeName` 创建卷
+创建卷 `docker volume create $volumeName`
 
 ## bind mount
 
