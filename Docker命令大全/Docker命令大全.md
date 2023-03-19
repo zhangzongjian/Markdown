@@ -162,12 +162,12 @@ docker修改配置重启后，harbor系列容器会挂掉，需要重启harbor
 
 docker push `服务器IP:端口/镜像名称:版本号`
 
-http推送会根据 `服务器IP:端口` 匹配是否配置了insecure-registries
+http推送会根据 `服务器IP:端口` 匹配是否配置了insecure-registries，否则会出现以下错误：
 
-> The push refers to repository [192.168.1.7:5000/opensuse]
-> Get "https://192.168.1.7:5000/v2/": http: server gave HTTP response to HTTPS client
->
-> FAQ: /etc/docker/daemon.json设置insecure-registries解决
+```
+The push refers to repository [192.168.1.7:5000/opensuse]
+Get "https://192.168.1.7:5000/v2/": http: server gave HTTP response to HTTPS client
+```
 
 # 数据管理/挂载目录
 
