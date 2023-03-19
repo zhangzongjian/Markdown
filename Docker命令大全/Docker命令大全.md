@@ -12,20 +12,20 @@
 | docker system events --filter image=$imageId | 查看docker事件   | 服务 | date -d "2010-07-20 10:25:30" +%s 转时间戳   |
 | docker system prune                          | docker空间清理   | 服务 | 慎用                                         |
 
-| 命令                                           | 描述               | 类型 | 备注                             |
-| ---------------------------------------------- | ------------------ | ---- | -------------------------------- |
-| docker pull tomcat:10.0.7                      | 从仓库拉取镜像     | 镜像 | 类似git的pull/commit/push        |
-| docker images                                  | 查看本地镜像仓库   | 镜像 |                                  |
-| docker rmi $imageId                            | 删除本地镜像       | 镜像 | -f --force 强制删除              |
-| docker save $iamgeId > image.tar              | 保持镜像至归档文件 | 镜像 | 含镜像历史记录和元数据（含tag）  |
-| docker save $iamgeId&#124; gzip > image.tar.gz | 保持镜像至归档文件 | 镜像 | gzip 将归档文件压小一点          |
-| docker load < image.tar                        | 导入镜像归档文件   | 镜像 | 含镜像历史记录和元数据（含tag）  |
-| docker tag $imageId repo:tag                   | 给镜像打标签       | 镜像 | 创建别名                         |
-| docker rmi repo:tag                            | 删除标签           | 镜像 | 如果镜像只有一个标签，则删除镜像 |
-| docker build . [-t repo:tag]                   | 构建镜像           | 镜像 | 使用Dockerfile文件构建镜像       |
-| docker inspect $imageId                        | 查看镜像元数据     | 镜像 |                                  |
-| docker history $imageId                        | 查看镜像构建历史   | 镜像 | --no-trunc显示详细               |
-| docker image prune                             | 清理<none>镜像     | 镜像 | 无标签且没被使用的镜像           |
+| 命令                                           | 描述                   | 类型 | 备注                             |
+| ---------------------------------------------- | ---------------------- | ---- | -------------------------------- |
+| docker pull tomcat:10.0.7                      | 从仓库拉取镜像         | 镜像 | 类似git的pull/commit/push        |
+| docker images                                  | 查看本地镜像仓库       | 镜像 |                                  |
+| docker rmi $imageId                            | 删除本地镜像           | 镜像 | -f --force 强制删除              |
+| docker save $iamgeId > image.tar              | 保持镜像至归档文件     | 镜像 | 含镜像历史记录和元数据（含tag）  |
+| docker save $iamgeId&#124; gzip > image.tar.gz | 保持镜像至归档文件     | 镜像 | gzip 将归档文件压小一点          |
+| docker load < image.tar                        | 导入镜像归档文件       | 镜像 | 含镜像历史记录和元数据（含tag）  |
+| docker tag $imageId repo:tag                   | 给镜像打标签           | 镜像 | 创建别名                         |
+| docker rmi repo:tag                            | 删除标签               | 镜像 | 如果镜像只有一个标签，则删除镜像 |
+| docker build . [-t repo:tag]                   | 构建镜像               | 镜像 | 使用Dockerfile文件构建镜像       |
+| docker inspect $imageId                        | 查看镜像元数据         | 镜像 |                                  |
+| docker history $imageId                        | 查看镜像构建历史       | 镜像 | --no-trunc显示详细               |
+| docker image prune                             | 清理&#60;none&#62;镜像 | 镜像 | 无标签且没被使用的镜像           |
 
 | 命令                                         | 描述                     | 类型 | 备注                                              |
 | -------------------------------------------- | ------------------------ | ---- | ------------------------------------------------- |
