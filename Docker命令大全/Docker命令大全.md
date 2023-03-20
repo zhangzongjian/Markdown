@@ -138,7 +138,7 @@ http://192.168.1.7  admin/Harbor12345
 
 #### 重启harbor
 
-`docker-compose stop` `docker-compose start`
+`cd /usr/local/harbor; docker-compose stop; docker-compose start`
 
 docker修改配置重启后，harbor系列容器会挂掉，需要重启harbor
 
@@ -181,15 +181,70 @@ Get "https://192.168.1.7:5000/v2/": http: server gave HTTP response to HTTPS cli
 
 ![typesofmounts.png](assets/types-of-mounts.png)
 
+挂载的目录，容器内外读写同步，多容器数据共享
+
+`docker inspect $containerId | sed -n '/Mounts/,/]/ p'` 查看容器挂载情况
+
 ## volume
 
-挂载到宿主机docker管理的卷路径 `/var/lib/docker/volumes/`
+挂载到宿主机docker管理的卷路径目录 `/var/lib/docker/volumes/`
 
-创建卷 `docker volume create $volumeName`
+`docker volume prune` 清理卷路径下无容器关联的卷
+
+`docker run -itd -v /home/container -v tomcat_date:/home/container1 --rm opensuse:tomcat` 匿名卷，指名卷，--rm 容器停止后自动删除容器(含匿名卷)
+
+```
+"Mounts": [
+            {
+                "Type": "volume",
+                "Name": "78cac3923a5e0f55bd7996b57664c6018643256f34063a36c36486f6c021bc8f",
+                "Source": "/var/lib/docker/volumes/78cac3923a5e0f55bd7996b57664c6018643256f34063a36c36486f6c021bc8f/_data",
+                "Destination": "/home/container",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "volume",
+                "Name": "tomcat_data",
+                "Source": "/var/lib/docker/volumes/tomcat_data/_data",
+                "Destination": "/home/container1",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            },
+
+]
+```
 
 ## bind mount
 
 挂载到宿主机任意目录
+
+`docker run -itd -v /home/host:/home/container -v /home/host1:/home/container1 opensuse:tomcat`
+
+```
+"Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/home/host",
+                "Destination": "/home/container",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/home/host1",
+                "Destination": "/home/container1",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+]
+```
 
 ## tmpfs mount
 
@@ -197,28 +252,60 @@ Get "https://192.168.1.7:5000/v2/": http: server gave HTTP response to HTTPS cli
 
 # 网络管理
 
-bridge : 每个容器都独立网卡，且容器间互通
-
-host : 共享宿主机ip，此模式下端口映射被废弃，且宿主机能看到容器内进程
-
 ```
 localhost:/tmp/zzj # docker network ls
 NETWORK ID     NAME      DRIVER    SCOPE
 e26ae0795173   bridge    bridge    local
 1ae0e00c07e2   host      host      local
 1e223ca5e95d   none      null      local
+```
 
+## bridge
+
+每个容器都独立网卡，且容器间互通，宿主机与容器互通。
+
+创建容器需要设置端口映射 `-p 宿主端口：容器端口` 才能外部访问
+
+```
+localhost:~ #docker run -itd -p 8080:8080 --net=bridge opensuse:tomcat
+localhost:~ # netstat -anp | grep 8080
+tcp        0      0 0.0.0.0:8080            0.0.0.0:*               LISTEN      5925/docker-proxy
+tcp6       0      0 :::8080                 :::*                    LISTEN      5931/docker-proxy
+```
+
+## host
+
+共享宿主机ip，此模式下端口映射被废弃，且宿主机能看到容器内进程
+
+```
+localhost:~ #docker run -itd --net=host opensuse:tomcat
+localhost:~ # netstat -anp | grep 8080
+tcp6       0      0 :::8080                 :::*                    LISTEN      8580/java
 ```
 
 # 查看镜像内容
 
 镜像包都是镜像分层的压缩文件
 
-![image.png](assets/image.png)
+```
+localhost:/tmp/zzj # tar -tvf opensuse_tomcat_images.tar | head -5
+drwxr-xr-x 0/0               0 2023-03-18 02:17 1b17d833eb1a70546b6120986aecab7ff8437f8f81e900196418a9925bbf4c9a/
+-rw-r--r-- 0/0               3 2023-03-18 02:17 1b17d833eb1a70546b6120986aecab7ff8437f8f81e900196418a9925bbf4c9a/VERSION
+-rw-r--r-- 0/0             482 2023-03-18 02:17 1b17d833eb1a70546b6120986aecab7ff8437f8f81e900196418a9925bbf4c9a/json
+-rw-r--r-- 0/0        12447744 2023-03-18 02:17 1b17d833eb1a70546b6120986aecab7ff8437f8f81e900196418a9925bbf4c9a/layer.tar
+drwxr-xr-x 0/0               0 2023-03-18 02:17 2ab7f0cb0d8df50a4786b8741ead5cdc83c64e8bd5521a7e178bec2380c5d0ab/
+```
 
 其实我们想看的是镜像文件系统，可以先创建容器，然后导出容器。vim即可查看内容
 
-![image1.png](assets/image1.png)
+```
+localhost:/tmp/zzj # tar -tvf filesystem.tar | head -5
+-rwxr-xr-x 0/0               0 2023-03-21 00:03 .dockerenv
+drwxr-xr-x 0/0               0 2023-03-17 02:17 bin/
+lrwxrwxrwx 0/0               0 2019-05-29 02:00 bin/arch -> /usr/bin/arch
+lrwxrwxrwx 0/0               0 2019-05-29 02:00 bin/awk -> /etc/alternatives/awk
+lrwxrwxrwx 0/0               0 2019-05-29 02:00 bin/basename -> /usr/bin/basename
+```
 
 # 构建镜像
 
