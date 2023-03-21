@@ -1,0 +1,10 @@
+version: '2.3'
+services:
+  tomcat:
+    image: opensuse:tomcat
+    container_name: opensuse_tomcat
+    volumes:
+      - type: bind # 目录不存在报错
+        source: /home/test/host
+        target: /home/test/container
+    network_mode: host

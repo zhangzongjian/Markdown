@@ -48,7 +48,7 @@
 | docker cp $containerId:PATH PATH             | 容器与宿主机之间拷贝文件 | 容器 | 同Linux的scp，可双向                              |
 | docker diff $containerId                     | 查看容器里文件结构的更改 | 容器 | 就是对比刚从镜像创建时和当前的文件变化            |
 | docker inspect $containerId                  | 查看容器元数据           | 容器 |                                                   |
-| docker export $containerId > filesystem.tar | 导出容器文件系统         | 容器 | 保存至归档文件，应用场景：制作基础镜像            |
+| docker export $containerId > filesystem.tar | 导出容器文件系统         | 容器 | 保存至归档文件，保存容器快照                      |
 | docker import filesystem.tar [repo:tag]     | 导入归档文件至新镜像     | 容器 | 和export配套使用                                  |
 | docker rename old_name new_name             | 容器重命名               | 容器 |                                                   |
 | docker container prune                       | 清理stop状态容器         | 容器 |                                                   |
@@ -161,6 +161,8 @@ http://192.168.1.7/devcenter-api-2.0
 `curl http://192.168.1.7:5000/v2/_catalog`
 
 `curl -u 'admin:Harbor12345' http://192.168.1.7/v2/_catalog`
+
+`curl http://192.168.1.7:5000/v2/{repository}/tags/list`
 
 ## 推送镜像
 
@@ -368,10 +370,43 @@ load 镜像归档文件到本地镜像
 
 ## docker export/import
 
-export 导出容器文件系统到归档文件
+export 导出容器文件系统到归档文件，保存容器快照
 
 import 导入归档文件到本地镜像
 
 ## docker commit
 
-将容器保存为镜像，并存入本地镜像
+将容器保存为镜像，并存入本地镜像，保存容器快照
+
+# Docker Compose
+
+Compose 是用于定义和运行多容器 Docker 应用程序的工具。通过 Compose，您可以使用 YML 文件来配置应用程序需要的所有服务。然后，使用一个命令，就可以从 YML 文件配置中创建并启动所有服务。
+
+（其实就是yml配置的方式管理 `docker run` 各种原生命令及参数，而且具备管理多容器、容器依赖关系等功能）
+
+## 使用示例：
+
+教程及配置参考 [https://www.runoob.com/docker/docker-compose.html](https://www.runoob.com/docker/docker-compose.html)
+
+`docker-compose.yml` 同目录下执行compose命令
+
+`docker-compose up -d` 创建并启动容器，-d 后台运行
+
+`docker-compose down` 停止并移除容器
+
+`docker-compose start` 启动服务
+
+`docker-compose stop` 停止服务
+
+```
+version: '2.3'
+services:
+  tomcat:
+    image: opensuse:tomcat
+    container_name: opensuse_tomcat
+    volumes:
+      - type: bind # 目录不存在报错
+        source: /home/test/host
+        target: /home/test/container
+    network_mode: host
+```
