@@ -70,7 +70,7 @@
 
 registry-mirrors 远程仓库拉取地址 pull
 
-insecure-registries 声明非安全(http)私有仓库 push
+insecure-registries 声明非安全(http)私有仓库（pull/push `服务器IP:端口/镜像名称:版本号`）
 
 设置后重启 `systemctl daemon-reload; systemctl restart docker`
 
@@ -248,8 +248,12 @@ mount方式目录映射注意事项：
 - 目录不存在自动创建
 - 映射以宿主机为主映射进去，容器内目录会被重写
 - 宿主机目录不存在，容器内目录会被重写为空
+- 映射文件，容器内目录不会被重写
 
-如果我们想要将宿主机目录映射出去呢？
+如果我们想要将容器目录映射出去呢？
+
+- volume匿名卷（缺点：不能指定宿主机路径）
+- 构建镜像时将容器内目录压缩，容器启动再解压回去，之后目录就是同步的
 
 # 网络管理
 
