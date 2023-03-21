@@ -1,5 +1,6 @@
 # 常用命令
 
+
 | 命令                                         | 描述             | 类型 | 备注                                         |
 | -------------------------------------------- | ---------------- | ---- | -------------------------------------------- |
 | systemctl daemon-reload                      | 重载服务配置     | 服务 |                                              |
@@ -11,6 +12,7 @@
 | docker system events --since="2022-03-12"    | 查看docker事件   | 服务 | date -d @1678562863 时间戳转格式             |
 | docker system events --filter image=$imageId | 查看docker事件   | 服务 | date -d "2010-07-20 10:25:30" +%s 转时间戳   |
 | docker system prune                          | docker空间清理   | 服务 | 慎用                                         |
+
 
 | 命令                                           | 描述                   | 类型 | 备注                             |
 | ---------------------------------------------- | ---------------------- | ---- | -------------------------------- |
@@ -26,6 +28,7 @@
 | docker inspect $imageId                        | 查看镜像元数据         | 镜像 |                                  |
 | docker history $imageId                        | 查看镜像构建历史       | 镜像 | --no-trunc显示详细               |
 | docker image prune                             | 清理&#60;none&#62;镜像 | 镜像 | 无标签且没被使用的镜像           |
+
 
 | 命令                                         | 描述                     | 类型 | 备注                                              |
 | -------------------------------------------- | ------------------------ | ---- | ------------------------------------------------- |
@@ -188,7 +191,10 @@ Get "https://192.168.1.7:5000/v2/": http: server gave HTTP response to HTTPS cli
 
 `docker volume prune` 清理卷路径下无容器关联的卷
 
-`docker run -itd -v /home/container -v tomcat_date:/home/container1 --rm opensuse:tomcat` 匿名卷，指名卷，--rm 容器停止后自动删除容器(含匿名卷)
+`docker run -itd -v /home/container -v tomcat_date:/home/container1 --rm opensuse:tomcat` 匿名卷，指名卷
+
+--rm 容器停止后自动删除容器(含匿名卷)
+--volumes-from otherContainer 共享其他容器的挂载目录
 
 ```
 "Mounts": [
@@ -320,34 +326,52 @@ docker build 构建镜像专用文件，固定文件名
 
 `docker cp + docker exec + docker commit 也能达到Dockerfile效果，但是效率低，而且需要启动容器（对比效果，以及镜像大小）`
 
-样例：[https://github.com/creack/docker-firefox/blob/master/Dockerfile](https://github.com/creack/docker-firefox/blob/master/Dockerfile)
-
 ```
-# Firefox over VNC
-#
-# VERSION               0.1
-# DOCKER-VERSION        0.2
-
-from	ubuntu:12.04
-# make sure the package repository is up to date
-run	echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
-run	apt-get update
-
-# Install vnc, xvfb in order to create a 'fake' display and firefox
-run	apt-get install -y x11vnc xvfb firefox
-run	mkdir /.vnc
-# Setup a password
-run	x11vnc -storepasswd 1234 ~/.vnc/passwd
-# Autostart firefox (might not be the best way to do it, but it does the trick)
-run	bash -c 'echo "firefox" >> /.bashrc'
+# 基于哪个镜像构建
+from    opensuse:my
+# 设置环境变量
+env     JAVA_HOME=/opt/jdk-11
+env     PATH=$JAVA_HOME/bin:$PATH
+# Dockerfile内变量
+arg     tomcat_pkg=apache-tomcat-10.1.7.tar.gz
+arg     jdk_pkg=jdk-11_linux-x64_bin.tar.gz
+# 设置需要挂载的容器目录，只能挂匿名卷
+volume  ["/home/container", "/home/container1"]
+# 拷贝文件到容器
+copy    ${tomcat_pkg} /opt
+copy    ${jdk_pkg} /opt
+# 构建镜像执行的命令，Dockerfile指令越多镜像层数越多，尽量一条run
+run     cd /opt ; tar -zxvf ${tomcat_pkg} >/dev/null ; rm ${tomcat_pkg} ; \
+        cd /opt && tar -zxvf ${jdk_pkg} >/dev/null ; rm ${jdk_pkg}
+# 容器健康检测指令，容器内执行
+healthcheck --interval=5s --timeout=5s --retries=2 CMD ["/bin/bash", "-c", "netstat -anp | grep 8080"]
+# 进入容器后自动cd到该目录
+workdir /opt/apache-tomcat-10.1.7/bin
+# 大致用法同entrypoint，两者区别： https://www.cnblogs.com/sparkdev/p/8461576.html
+# 与entrypoint同时存在，则cmd只能作为entrypoint的参数
+#cmd     ["/bin/bash", "-c", "/opt/apache-tomcat-10.1.7/bin/startup.sh; tail -f /dev/null"]
+# 让容器以程序的形式运行，程序结束容器也就exit了
+entrypoint ["/bin/bash", "-c", "/opt/apache-tomcat-10.1.7/bin/startup.sh; tail -f /dev/null"]
 ```
 
 ## docker build
 
-指定镜像创建容器，执行一系列Dockerfile指令，最后commit保存为镜像。执行完并没有容器保留。
+使用Dockerfile构建镜像
+
+可以理解为：指定镜像创建容器，执行一系列指令，最后commit将容器保存为镜像，执行完删除容器
 
 ## docker save/load
 
+save 保存本地镜像到归档文件
+
+load 镜像归档文件到本地镜像
+
 ## docker export/import
 
+export 导出容器文件系统到归档文件
+
+import 导入归档文件到本地镜像
+
 ## docker commit
+
+将容器保存为镜像，并存入本地镜像
