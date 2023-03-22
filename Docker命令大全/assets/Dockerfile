@@ -1,4 +1,4 @@
-# 基于哪个镜像构建
+# 基于哪个镜像构建，会自动下载镜像
 from    opensuse:my
 # 设置环境变量
 env     JAVA_HOME=/opt/jdk-11
