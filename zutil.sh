@@ -27,7 +27,9 @@ function zfind() {
   if [[ $# -gt 0 && $1 != -* ]]; then
     local name=$1
     shift
-    local cmd="find $(pwd) -name \"$name\" $@"
+    local ext=$@
+    [[ "${ext}" == *-ls* ]] && ext=${ext//"-ls"/}" -exec ls -lh {} +"
+    local cmd="find $(pwd) -name \"$name\" $ext"
     echo "$cmd"; eval "$cmd"
     return
   fi
