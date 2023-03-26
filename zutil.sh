@@ -28,12 +28,15 @@ function zfind() {
     local name=$1
     shift
     local ext=$@
+    local is_cd=false
     [[ "${ext}" == *-ls* ]] && ext=${ext//"-ls"/}" -exec ls -lh {} +"
+    [[ "${ext}" == *-cd* ]] && ext=${ext//"-cd"/"-type d"} && is_cd=true
     local cmd="find $(pwd) -name \"$name\" $ext"
     echo "$cmd"
     local result=$(eval "$cmd")
-    echo "${result}"
+    [ -n "${result}" ] && echo "${result}"
     r=$(echo "${result}" | tail -1)
+    [ -n "${r}" ] && [ "${is_cd}" == "true" ] && cd ${r}
     return
   fi
   find $(pwd) "$@"
