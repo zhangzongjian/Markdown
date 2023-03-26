@@ -30,7 +30,10 @@ function zfind() {
     local ext=$@
     [[ "${ext}" == *-ls* ]] && ext=${ext//"-ls"/}" -exec ls -lh {} +"
     local cmd="find $(pwd) -name \"$name\" $ext"
-    echo "$cmd"; eval "$cmd"
+    echo "$cmd"
+    local result=$(eval "$cmd")
+    echo "${result}"
+    r=$(echo "${result}" | tail -1)
     return
   fi
   find $(pwd) "$@"
