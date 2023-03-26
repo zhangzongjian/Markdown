@@ -20,17 +20,21 @@ function zfind() {
 }
 
 function main() {
-  if [ "$0" == "zutil.sh" ]; then # sh zutil.sh
+  if [[ "$0" == *zutil.sh ]]; then # sh zutil.sh
     local zutil=$(readlink -m $0)
     local profile=/root/.bashrc
     local add_str="[ -f ${zutil} ] && source ${zutil} &>/dev/null ; echo zutil-add >/dev/null"
+    [ ! -f ${profile} ] && touch ${profile}
     if grep -q "zutil-add" ${profile}; then
+      echo "Replace config to ${profile}"
       sed -i "/zutil-add/c ${add_str}" ${profile}
     else
+      echo "Add config to ${profile}"
       echo -e "\n${add_str}" >> ${profile}
     fi
+    echo "${add_str}"
   else # source zutil.sh
-    echo "source zutil.sh" > /dev/null
+    alias cdz='cd /tmp/zzj/'
   fi
 }
 
