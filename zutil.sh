@@ -16,7 +16,22 @@ function zhelp() {
 }
 
 function zfind() {
-  date
+  if [[ $# -gt 1 && $2 != -* ]]; then
+    local name=$1
+    local grep_str=$2
+    shift 2
+    local cmd="find $(pwd) -name \"$name\" | xargs grep --color -n \"${grep_str}\" $@"
+    echo "$cmd"; eval "$cmd"
+    return
+  fi
+  if [[ $# -gt 0 && $1 != -* ]]; then
+    local name=$1
+    shift
+    local cmd="find $(pwd) -name \"$name\" $@"
+    echo "$cmd"; eval "$cmd"
+    return
+  fi
+  find $(pwd) "$@"
 }
 
 function main() {
