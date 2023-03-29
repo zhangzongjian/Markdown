@@ -1,9 +1,6 @@
 #!/bin/bash
 
-zutil=$(cat /root/.bashrc | grep "zutil-add" | grep -Eo "source .*.sh" | awk '{print $2}')
-
 function zupdate() {
-  [ -z "${zutil}" ] && zutil=/tmp/zzj/zutil.sh
   wget http://192.168.1.5:8008/D%3A/IdeaProjects/Markdown/zutil.sh -O $zutil.tmp
   if [ $(wc -l < $zutil.tmp) -ne 0 ]; then
     set -x
@@ -18,24 +15,27 @@ function zdownload() {
 }
 
 function zhelp() {
-  local fun_name
+  local fun_name=$1
+  local fun_line
   local remark
   local blank_str="                                "
-  grep "^function " ${zutil} | while read -r fun_name; do
+  grep "^function " ${zutil} | while read -r fun_line; do
+    [ -n "${fun_name}" ] && [[ ! "${fun_line}" =~ "${fun_name}" ]] && continue
+    echo "-------------------------------------"
     remark=""
-    local line_num=$(grep -n "^${fun_name}$" ${zutil} | awk -F':' '{print $1}')
+    local line_num=$(grep -n "^${fun_line}$" ${zutil} | awk -F':' '{print $1}')
     for ((line_num = line_num - 1; line_num > 0; line_num--)); do
       local line_str=$(sed -n "${line_num} p" ${zutil})
       if [ $(expr index "${line_str}" "#") -eq 1 ]; then
         remark=$(echo -e "${remark}\n${blank_str}${line_str}")
       else
-        fun_name=$(echo ${fun_name} | awk '{print $2}' | sed 's/()//g')
-        echo ${fun_name}"$(echo "${remark}" | tac)" | sed "1 s/${blank_str}/${blank_str:${#fun_name}}/g" | sed "s/ #/ /g"
+        fun_line=$(echo ${fun_line} | awk '{print $2}' | sed 's/()//g')
+        echo ${fun_line}"$(echo "${remark}" | tac)" | sed "1 s/${blank_str}/${blank_str:${#fun_line}}/g" | sed "s/ #/ /g"
         break
       fi
     done
-    echo "-------------------------------------"
   done
+  echo "-------------------------------------"
 }
 
 function zfind() {
@@ -53,8 +53,8 @@ function zfind() {
     shift
     local ext=$@
     local is_cd=false
-    [[ "${ext}" == *-ls* ]] && ext=${ext//"-ls"/}" -exec ls -lh {} +"
-    [[ "${ext}" == *-cd* ]] && ext=${ext//"-cd"/"-type d"} && is_cd=true
+    [[ "${ext}" =~ "-ls" ]] && ext=${ext//"-ls"/}" -exec ls -lh {} +"
+    [[ "${ext}" =~ "-cd" ]] && ext=${ext//"-cd"/"-type d"} && is_cd=true
     local cmd="find $(pwd) -name \"$name\" $ext"
     echo "$cmd"
     local result=$(eval "$cmd")
@@ -67,7 +67,7 @@ function zfind() {
 }
 
 function zmain() {
-  if [[ "$0" == *zutil.sh ]]; then # sh zutil.sh
+  if [[ "$0" =~ "zutil.sh" ]]; then # sh zutil.sh
     local zutil=$(readlink -m $0)
     local profile=/root/.bashrc
     local add_str="[ -f ${zutil} ] && source ${zutil} &>/dev/null ; echo zutil-add >/dev/null"
@@ -81,7 +81,9 @@ function zmain() {
     fi
     echo "${add_str}"
   else # source zutil.sh
+    zutil=$(readlink -m ${BASH_SOURCE[0]})
     alias cdz='cd /tmp/zzj/'
+    complete -W "$(cat ${zutil} | grep "^function [^()]*" -Eo | awk '{print $2}' | xargs)" zhelp
   fi
 }
 
