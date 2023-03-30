@@ -10,17 +10,34 @@ function zupdate() {
   source ${zutil}
 }
 
-function zget() {
-  if [ $# == 0 ]; then
-    echo 'zget "win_file_path" target_path target_path   # 下载到多个目标'
-    echo 'zget target_path                               # 从默认win路径下载到目标'
-    echo 'zget "win_file_path"                           # 下载到当前目录'
-    return
+function zjad() {
+  trap "rm -rf /tmp/jad_tmp /tmp/cfr-0.144.jar" RETURN SIGQUIT
+  wget http://192.168.1.5:8008/D%3A/opt/cfr-0.144.jar -O /tmp/cfr-0.144.jar &> /dev/null
+  PATH=$PATH:$(dirname $(ps -ef | grep -Eo "/[^ ]*/bin/java" | grep -Fv "*" | head -1))
+  if [ $# -eq 2 ] && [[ $1 =~ \.jar$ ]]; then
+    local jar_file=$1
+    local class_file=$(unzip -l "$jar_file" | awk '{print $4}' | grep "$2")
+    if [ -z "${class_file}" ] || [ $(echo "${class_file}" | wc -l) -gt 1 ]; then
+      [ -n "${class_file}" ] && echo "${class_file}"
+      echo "zjad failed. Please select one exist class file."
+      return 1
+    fi
+    unzip -o $jar_file -d /tmp/jad_tmp &> /dev/null
+    zjad /tmp/jad_tmp/${class_file}
+  else
+    java -jar /tmp/cfr-0.144.jar "$@" | less
   fi
+}
+
+# zget "win_file_path" target_path target_path   # 下载到多个目标
+# zget target_path                               # 从默认win路径下载到目标
+# zget "win_file_path"                           # 下载到当前目录
+function zget() {
+  [ $# == 0 ] &&  zhelp "zget" && return
   local default_path="D:\\ftp"
   if [[ ! "$1" =~ "\\" ]] && [[ ! "$1" =~ "/"  ]]; then  # 仅文件名
     local file_path=$(echo "${default_path}\\$1" | sed 's#\\#/#g')
-  elif [[ "$1" =~ "\\" ]];then  # win_path
+  elif [[ "$1" =~ "\\" ]]; then # win_path
     local file_path=$(echo "$1" | sed 's#\\#/#g' | sed 's/ /%20/g' | sed 's/%/%25/g')
   fi
   local file_name=$(echo "$file_path" | sed 's#.*/##' | sed 's/%20/ /g' | sed 's/%25/%/g')
@@ -30,7 +47,7 @@ function zget() {
       [ -d "${target}" ] && target="${target}/${file_name}"
       wget http://192.168.1.5:8008/${file_path} -O "${target}"
     done
-  elif [[ "$1" =~ ^/ ]];then  # zget target_path
+  elif [[ "$1" =~ ^/ ]]; then # zget target_path
     zget $(basename $1) $1
   else  # zget win_file_path
     wget http://192.168.1.5:8008/${file_path} -O "${file_name}"
@@ -45,10 +62,10 @@ function zhelp() {
   local fun_name=$1
   local fun_line
   local remark
-  local blank_str="                                "
+  local blank_str="                        "
   grep "^function " ${zutil} | while read -r fun_line; do
     [ -n "${fun_name}" ] && [[ ! "${fun_line}" =~ "${fun_name}" ]] && continue
-    echo "-------------------------------------"
+    printf "%-100s\n" "-" | sed 's/ /-/g'
     remark=""
     local line_num=$(grep -n "^${fun_line}$" ${zutil} | awk -F':' '{print $1}')
     for ((line_num = line_num - 1; line_num > 0; line_num--)); do
@@ -62,7 +79,7 @@ function zhelp() {
       fi
     done
   done
-  echo "-------------------------------------"
+  printf "%-100s\n" "-" | sed 's/ /-/g'
 }
 
 function zfind() {
