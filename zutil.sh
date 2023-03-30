@@ -10,6 +10,33 @@ function zupdate() {
   source ${zutil}
 }
 
+function zget() {
+  if [ $# == 0 ]; then
+    echo 'zget "win_file_path" target_path target_path   # 下载到多个目标'
+    echo 'zget target_path                               # 从默认win路径下载到目标'
+    echo 'zget "win_file_path"                           # 下载到当前目录'
+    return
+  fi
+  local default_path="D:\\ftp"
+  if [[ ! "$1" =~ "\\" ]] && [[ ! "$1" =~ "/"  ]]; then  # 仅文件名
+    local file_path=$(echo "${default_path}\\$1" | sed 's#\\#/#g')
+  elif [[ "$1" =~ "\\" ]];then  # win_path
+    local file_path=$(echo "$1" | sed 's#\\#/#g' | sed 's/ /%20/g' | sed 's/%/%25/g')
+  fi
+  local file_name=$(echo "$file_path" | sed 's#.*/##' | sed 's/%20/ /g' | sed 's/%25/%/g')
+  if [ $# -gt 1 ]; then  # zget win_file_path target_path
+    shift
+    for target in "$@"; do
+      [ -d "${target}" ] && target="${target}/${file_name}"
+      wget http://192.168.1.5:8008/${file_path} -O "${target}"
+    done
+  elif [[ "$1" =~ ^/ ]];then  # zget target_path
+    zget $(basename $1) $1
+  else  # zget win_file_path
+    wget http://192.168.1.5:8008/${file_path} -O "${file_name}"
+  fi
+}
+
 function zdownload() {
   date
 }
