@@ -21,11 +21,22 @@ function zdir() {
   fi
 }
 
-# 自动收集参数 (function内使用)
-# declare -A opts && _get_opts "$@"     # 收集
+# 对于复杂的传参，自动收集参数 (function内使用)
+# declare -A opts && _get_opts "$@"     # 收集关系参数
 # pkg=${opts[--pkg]}                    # 有值参数，取值
 # [ -n "${opts[-h]}" ] && echo hello    # 无值参数
+# declare -a args && _get_opts "$@"     # 收集数组参数
+# param=${args[0]}                      # 根据下标获取
 function _get_opts() {
+  # 收集数组参数
+  local last_str
+  local i=0
+  local var
+  for var in "$@"; do
+      [[ ! ${var} =~ ^- ]] && [[ ! ${last_str} =~ ^- ]] && args[$((i++))]=$var
+      last_str=${var}
+  done
+  # 收集关系参数
   while [[ $# -gt 0 ]]; do
     local key=$1
     local value=$2
@@ -38,16 +49,6 @@ function _get_opts() {
     fi
   done
 }
-
-function ztest() {
-  declare -A opts && _get_opts "$@"
-  echo ${opts[-a]}
-  echo ${opts[-b]}
-  echo ${opts[-c]}
-  echo "${args[@]}"
-}
-
-ztest -b bb param2  -a aa param1  param3 -c cc
 
 function zjad() {
   trap "rm -rf /tmp/jad_tmp /tmp/cfr-0.144.jar" RETURN SIGQUIT
@@ -83,6 +84,7 @@ function zget() {
   local file_name=$(echo "$file_path" | sed 's#.*/##' | sed 's/%20/ /g' | sed 's/%25/%/g')
   if [ $# -gt 1 ]; then  # zget win_file_path target_path
     shift
+    local target
     for target in "$@"; do
       [ -d "${target}" ] && target="${target}/${file_name}"
       wget http://192.168.1.5:8008/${file_path} -O "${target}"
