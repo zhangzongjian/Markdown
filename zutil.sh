@@ -10,6 +10,45 @@ function zupdate() {
   source ${zutil}
 }
 
+function zdir() {
+  if [ $# == 0 ]; then
+    cd $(readlink -m .)
+    return
+  elif [ -d "$1" ]; then
+    cd $(readlink -m $1)
+  else
+    cd $(dirname $(readlink -m $1))
+  fi
+}
+
+# 自动收集参数 (function内使用)
+# declare -A opts && _get_opts "$@"     # 收集
+# pkg=${opts[--pkg]}                    # 有值参数，取值
+# [ -n "${opts[-h]}" ] && echo hello    # 无值参数
+function _get_opts() {
+  while [[ $# -gt 0 ]]; do
+    local key=$1
+    local value=$2
+    echo $key | grep -Eq '^-' && opts[$key]=$value
+    if echo $value | grep -Eq '^-' || [ $# == 1 ]; then
+      opts[$key]="#"
+      shift 1
+    else
+      shift 2
+    fi
+  done
+}
+
+function ztest() {
+  declare -A opts && _get_opts "$@"
+  echo ${opts[-a]}
+  echo ${opts[-b]}
+  echo ${opts[-c]}
+  echo "${args[@]}"
+}
+
+ztest -b bb param2  -a aa param1  param3 -c cc
+
 function zjad() {
   trap "rm -rf /tmp/jad_tmp /tmp/cfr-0.144.jar" RETURN SIGQUIT
   wget http://192.168.1.5:8008/D%3A/opt/cfr-0.144.jar -O /tmp/cfr-0.144.jar &> /dev/null
@@ -29,6 +68,7 @@ function zjad() {
   fi
 }
 
+# 从windows传文件到linux
 # zget "win_file_path" target_path target_path   # 下载到多个目标
 # zget target_path                               # 从默认win路径下载到目标
 # zget "win_file_path"                           # 下载到当前目录
