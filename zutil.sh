@@ -114,22 +114,31 @@ function zeval() {
         send "yes\r"
         exp_continue
       }
+      "#" {
+        send "\r"
+        interact
+      }
     }
   '
 }
 
+function zssh() {
+  declare -A opts && _get_opts "$@"
+  local exec_file=${opts[-f]}
+  if [ -n "${exec_file}" ]; then
+    ls "${exec_file}" > /dev/null || return
+    zeval scp ${exec_file} "$*":/tmp/zexec.sh
+  else
+    zeval ssh "$@"
+  fi
+}
+
 function zdownload() {
   [ $# == 0 ] &&  zhelp "zdownload" && return
-  local type="scp"
   local file_path=$1
   local file_new_name=$2
   local file_name=$(basename ${file_path})
   [ -n "${file_new_name}" ] && file_name=${file_new_name}
-  # 使用scp上传文件，需windows开启ssh服务
-  if [ "${type}" == "scp" ]; then
-    zeval scp ${file_path} root@192.168.1.5:~/${file_name} --pwd root123
-    return
-  fi
   # 使用ftp上传文件，需windows开启ftp服务
   which ftp > /dev/null || return
   echo "open 192.168.1.5
