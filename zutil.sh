@@ -106,28 +106,38 @@ function zeval() {
     set timeout 2
     spawn '"${command}"'
     expect {
-      "Password" { send '"${ssh_pwd}\r"' }
-      "yes/no" { send "yes\r"; exp_continue }
-      "#" { send "\r" }
+      "assword" {
+        send '"${ssh_pwd}\r"'
+        exp_continue
+      }
+      "yes/no" {
+        send "yes\r"
+        exp_continue
+      }
     }
-    interact
   '
 }
 
 function zdownload() {
   [ $# == 0 ] &&  zhelp "zdownload" && return
-  which ftp > /dev/null || return
+  local type="scp"
   local file_path=$1
   local file_new_name=$2
   local file_name=$(basename ${file_path})
   [ -n "${file_new_name}" ] && file_name=${file_new_name}
+  # 使用scp上传文件，需windows开启ssh服务
+  if [ "${type}" == "scp" ]; then
+    zeval scp ${file_path} root@192.168.1.5:~/${file_name} --pwd root123
+    return
+  fi
+  # 使用ftp上传文件，需windows开启ftp服务
+  which ftp > /dev/null || return
   echo "open 192.168.1.5
   user ftpuser ftp123
   binary
   hash
   put ${file_path} ${file_name}
-  close
-  bye" | ftp -n
+  quit" | ftp -n
   echo "Download finish. (${file_name})"
 }
 
