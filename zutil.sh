@@ -69,7 +69,7 @@ function zjad() {
   fi
 }
 
-# 从windows传文件到linux
+# 从windows传文件到linux（使用everything软件的http服务器下载）
 # zget "win_file_path" target_path target_path   # 下载到多个目标
 # zget target_path                               # 从默认win路径下载到目标
 # zget "win_file_path"                           # 下载到当前目录
@@ -97,7 +97,20 @@ function zget() {
 }
 
 function zdownload() {
-  date
+  [ $# == 0 ] &&  zhelp "zdownload" && return
+  which ftp >/dev/null || return
+  local file_path=$1
+  local file_new_name=$2
+  local file_name=$(basename ${file_path})
+  [ -n "${file_new_name}" ] && file_name=${file_new_name}
+  echo "open 192.168.1.5
+  user ftpuser ftp123
+  binary
+  hash
+  put ${file_path} ${file_name}
+  close
+  bye" | ftp -n >/dev/null
+  echo "Download finish. (${file_name})"
 }
 
 function zhelp() {
