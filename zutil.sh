@@ -96,9 +96,27 @@ function zget() {
   fi
 }
 
+function zeval() {
+  declare -A opts && _get_opts "$@"
+  declare -a args && _get_opts "$@"
+  local command="${args[@]}"
+  local ssh_pwd=${opts[--pwd]}
+  [ -z "${ssh_pwd}" ] && ssh_pwd="root123"
+  expect -c '
+    set timeout 2
+    spawn '"${command}"'
+    expect {
+      "Password" { send '"${ssh_pwd}\r"' }
+      "yes/no" { send "yes\r"; exp_continue }
+      "#" { send "\r" }
+    }
+    interact
+  '
+}
+
 function zdownload() {
   [ $# == 0 ] &&  zhelp "zdownload" && return
-  which ftp >/dev/null || return
+  which ftp > /dev/null || return
   local file_path=$1
   local file_new_name=$2
   local file_name=$(basename ${file_path})
@@ -109,7 +127,7 @@ function zdownload() {
   hash
   put ${file_path} ${file_name}
   close
-  bye" | ftp -n >/dev/null
+  bye" | ftp -n
   echo "Download finish. (${file_name})"
 }
 
@@ -165,6 +183,7 @@ function zfind() {
   find $(pwd) "$@"
 }
 
+# 工具安装和初始化
 function zmain() {
   if [[ "$0" =~ "zutil.sh" ]]; then # sh zutil.sh
     local zutil=$(readlink -m $0)
