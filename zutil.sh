@@ -22,11 +22,11 @@ function zdir() {
 }
 
 # 对于复杂的传参，自动收集参数 (function内使用)
-# declare -A opts && _get_opts "$@"     # 收集关系参数
-# pkg=${opts[--pkg]}                    # 有值参数，取值
-# [ -n "${opts[-h]}" ] && echo hello    # 无值参数
-# declare -a args && _get_opts "$@"     # 收集数组参数
-# param=${args[0]}                      # 根据下标获取
+# 1.declare -A opts && _get_opts "$@"     # 收集关系参数
+#   pkg=${opts[--pkg]}                    # 有值参数，取值
+#   [ -n "${opts[-h]}" ] && echo hello    # 无值参数
+# 2.declare -a args && _get_opts "$@"     # 收集数组参数
+#   param=${args[0]}                      # 根据下标获取
 function _get_opts() {
   # 收集数组参数
   local last_str
@@ -122,12 +122,22 @@ function zeval() {
   '
 }
 
+# 执行远程主机命令
+# zssh root@127.0.0.1 --pwd PWD           # 登录到目标主机
+# zssh root@127.0.0.1 COMMAND --pwd PWD   # 执行远程主机命令
+# zssh root@127.0.0.1 -f FILE --pwd PWD   # 发送脚本到远程主机执行
 function zssh() {
   declare -A opts && _get_opts "$@"
+  declare -a args && _get_opts "$@"
+  local host=${args[0]}
   local exec_file=${opts[-f]}
+  local ssh_pwd=${opts[--pwd]}
+  [ -n "${ssh_pwd}" ] && ssh_pwd="--pwd ${ssh_pwd}"
   if [ -n "${exec_file}" ]; then
     ls "${exec_file}" > /dev/null || return
-    zeval scp ${exec_file} "$*":/tmp/zexec.sh
+    zeval scp ${zutil} ${host}:/tmp/zutil.sh ${ssh_pwd}
+    zeval scp ${exec_file} ${host}:/tmp/zexec.sh ${ssh_pwd}
+    zeval ssh ${host} "cd /tmp \; source zutil.sh \; source  zexec.sh \; rm -rf zutil.sh zexec.sh" ${ssh_pwd}
   else
     zeval ssh "$@"
   fi
