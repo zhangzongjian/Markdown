@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# 更新本工具
 function zupdate() {
   wget http://192.168.1.5:8008/D%3A/IdeaProjects/Markdown/zutil.sh -O $zutil.tmp
   if [ $(wc -l < $zutil.tmp) -ne 0 ]; then
@@ -10,6 +11,8 @@ function zupdate() {
   source ${zutil}
 }
 
+# 跳转到指定文件目录
+# zdir /tmp/aaa/bbb/ccc/test.txt        # 跳转到文件所在目录
 function zdir() {
   if [ $# == 0 ]; then
     cd $(readlink -m .)
@@ -50,6 +53,10 @@ function _get_opts() {
   done
 }
 
+# 反编译jar包，反编译class文件
+# zjad test.jar                 # 反编译整个jar包
+# zjad Main.class               # 反编译class文件
+# zjad test.jar Main.class      # 反编译jar包里的某个class
 function zjad() {
   trap "rm -rf /tmp/jad_tmp /tmp/cfr-0.144.jar" RETURN SIGQUIT
   wget http://192.168.1.5:8008/D%3A/opt/cfr-0.144.jar -O /tmp/cfr-0.144.jar &> /dev/null
@@ -96,11 +103,16 @@ function zget() {
   fi
 }
 
+# 执行需要密码的命令，自动输入密码
+# zeval "su - root" --pwd PWD
+# zeval ssh root@127.0.0.1 --pwd PWD
+# zeval scp file root@127.0.0.1:/tmp --pwd PWD
 function zeval() {
   declare -A opts && _get_opts "$@"
   declare -a args && _get_opts "$@"
   local command="${args[@]}"
-  local ssh_pwd=${opts[--pwd]}
+  local ssh_pwd=${opts[--\
+    pwd]}
   [ -z "${ssh_pwd}" ] && ssh_pwd="root123"
   expect -c '
     set timeout 2
@@ -143,6 +155,9 @@ function zssh() {
   fi
 }
 
+# 从linux传文件到windows（需windows开启ftp服务）
+# zdownload /tmp/test.txt               # 上传文件到ftp根目录
+# zdownload /tmp/test.txt new_name      # 上传文件到ftp根目录，并重命名文件
 function zdownload() {
   [ $# == 0 ] &&  zhelp "zdownload" && return
   local file_path=$1
@@ -160,6 +175,9 @@ function zdownload() {
   echo "Download finish. (${file_name})"
 }
 
+# 查看本工具命令列表
+# zhelp                    # 查看全部命令说明
+# zhelp zfind              # 查看单条命令说明
 function zhelp() {
   local fun_name=$1
   local fun_line
@@ -176,7 +194,7 @@ function zhelp() {
         remark=$(echo -e "${remark}\n${blank_str}${line_str}")
       else
         fun_line=$(echo ${fun_line} | awk '{print $2}' | sed 's/()//g')
-        echo ${fun_line}"$(echo "${remark}" | tac)" | sed "1 s/${blank_str}/${blank_str:${#fun_line}}/g" | sed "s/ #/ /g"
+        echo ${fun_line}"$(echo "${remark}" | tac)" | sed "1 s/${blank_str}/${blank_str:${#fun_line}}/g"
         break
       fi
     done
@@ -184,6 +202,9 @@ function zhelp() {
   printf "%-100s\n" "-" | sed 's/ /-/g'
 }
 
+# 简洁版find命令
+# zfind "filename"                         # 支持find命令各种参数
+# zfind "filename" "content"               # 支持grep命令各种参数
 function zfind() {
   if [[ $# -gt 1 && $2 != -* ]]; then
     local name=$1
