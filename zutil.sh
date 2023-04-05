@@ -233,6 +233,21 @@ function zfind() {
   find $(pwd) "$@"
 }
 
+function zexec_main() {
+  local run_path=/tmp/zzj/zzj-service
+  local war_path=/tmp/zzj/zzj-service-1.0.0-SNAPSHOT.war
+  wget http://192.168.1.5:8008/D%3A/IdeaProjects/zzj-service/target/zzj-service-1.0.0-SNAPSHOT.war -O ${war_path} &> /dev/null
+  unzip -o ${war_path} -d ${run_path} &> /dev/null
+  cd ${run_path}
+  PATH=$PATH:$(dirname $(ps -ef | grep -Eo "/[^ ]*/bin/java" | grep -Fv "*" | head -1) 2> /dev/null)
+  java -Dlogback.configurationFile=${run_path}/WEB-INF/classes/logback-spring.xml -classpath ${run_path}/WEB-INF/classes:${run_path}/WEB-INF/lib/* "$@"
+  cd - &> /dev/null
+}
+
+function ztest() {
+  zexec_main com.zzj.main.Main "$@"
+}
+
 # 工具安装和初始化
 function zmain() {
   if [[ "$0" =~ "zutil.sh" ]]; then # sh zutil.sh
