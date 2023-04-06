@@ -208,9 +208,10 @@ function zhelp() {
 function zfind() {
   if [[ $# -gt 1 && $2 != -* ]]; then
     local name=$1
+    [ "$name" == "jar" ] && name="*.jar"
     local grep_str=$2
     shift 2
-    local cmd="find $(pwd) -name \"$name\" | xargs grep --color -n \"${grep_str}\" $@"
+    local cmd="find $(pwd)/ -name \"$name\" | xargs grep --color -n \"${grep_str}\" $@"
     echo "$cmd"
     eval "$cmd"
     return
@@ -222,7 +223,7 @@ function zfind() {
     local is_cd=false
     [[ "${ext}" =~ "-ls" ]] && ext=${ext//"-ls"/}" -exec ls -lh {} +"
     [[ "${ext}" =~ "-cd" ]] && ext=${ext//"-cd"/"-type d"} && is_cd=true
-    local cmd="find $(pwd) -name \"$name\" $ext"
+    local cmd="find $(pwd)/ -name \"$name\" $ext"
     echo "$cmd"
     local result=$(eval "$cmd")
     [ -n "${result}" ] && echo "${result}"
@@ -240,7 +241,9 @@ function zexec_main() {
   unzip -o ${war_path} -d ${run_path} &> /dev/null
   cd ${run_path}
   PATH=$PATH:$(dirname $(ps -ef | grep -Eo "/[^ ]*/bin/java" | grep -Fv "*" | head -1) 2> /dev/null)
-  java -Dlogback.configurationFile=${run_path}/WEB-INF/classes/logback-spring.xml -classpath ${run_path}/WEB-INF/classes:${run_path}/WEB-INF/lib/* "$@"
+  CLASS_PATH="${CLASS_PATH}:${run_path}/WEB-INF/classes:${run_path}/WEB-INF/lib/*"
+  JAVA_OPTS="${JAVA_OPTS} "
+  java ${JAVA_OPTS} -Dlogging.config=${run_path}/WEB-INF/classes/logback-spring.xml -classpath ${CLASS_PATH} "$@"
   cd - &> /dev/null
 }
 
