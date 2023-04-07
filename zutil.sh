@@ -164,7 +164,12 @@ function zdownload() {
   local file_new_name=$2
   local file_name=$(basename ${file_path})
   [ -n "${file_new_name}" ] && file_name=${file_new_name}
-  # 使用ftp上传文件，需windows开启ftp服务
+  # 通过文件服务上传
+  if curl -X POST http://192.168.1.5:8080/upload -F "file=@${file_path}" -F "name=${file_new_name}" 2> /dev/null; then
+    echo "Download finish. (${file_name})"
+    return
+  fi
+  # 通过ftp上传文件，需windows开启ftp服务
   which ftp > /dev/null || return
   echo "open 192.168.1.5
   user ftpuser ftp123
