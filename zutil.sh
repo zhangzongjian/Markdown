@@ -243,7 +243,7 @@ function zexec_main() {
   PATH=$PATH:$(dirname $(ps -ef | grep -Eo "/[^ ]*/bin/java" | grep -Fv "*" | head -1) 2> /dev/null)
   CLASS_PATH="${CLASS_PATH}:${run_path}/WEB-INF/classes:${run_path}/WEB-INF/lib/*"
   JAVA_OPTS="${JAVA_OPTS} "
-  java ${JAVA_OPTS} -Dlogging.config=${run_path}/WEB-INF/classes/logback-spring.xml -classpath ${CLASS_PATH} "$@"
+  java ${JAVA_OPTS} -Dlogback.configurationFile=${run_path}/WEB-INF/classes/logback-spring.xml -classpath ${CLASS_PATH} "$@"
   cd - &> /dev/null
 }
 
