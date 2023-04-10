@@ -165,7 +165,7 @@ function zdownload() {
   local file_name=$(basename ${file_path})
   [ -n "${file_new_name}" ] && file_name=${file_new_name}
   # 通过文件服务上传
-  if curl -X POST http://192.168.1.5:8080/upload -F "file=@${file_path}" -F "name=${file_new_name}" 2> /dev/null; then
+  if curl -X POST http://192.168.1.5:8080/upload -F "file=@${file_path}" -F "name=${file_name}" 2> /dev/null; then
     echo "Download finish. (${file_name})"
     return
   fi
@@ -252,8 +252,34 @@ function zexec_main() {
   cd - &> /dev/null
 }
 
-function ztest() {
-  zexec_main com.zzj.main.Main "$@"
+zipFileName=zzj-service-1.0.0-SNAPSHOT.war
+function zdecompress() {
+
+  echo "$1"
+  local archiveFile="$1"
+  local archiveZipName=$(basename "$archiveFile")
+  local archiveFileName=$(basename "$archiveFile" | perl -pe "s#${support_ext}\$##g")
+  [ "$archiveFile" != "$zipFileName" ] && archiveFileName="${archiveFileName}_1"
+  local archiveDirName=$(dirname "$archiveFile")
+  mkdir -p "$archiveDirName/$archiveFileName"
+  #解压命令
+  local extractDir="$archiveDirName/$archiveFileName"
+  if [[ "$archiveFile" == *.zip ]] || [[ "$archiveFile" == *.jar ]] || [[ "$archiveFile" == *.war ]]; then
+    unzip -o "$archiveFile" -d "$extractDir" > /dev/null
+  elif [[ "$archiveFile" == *.tar.gz ]]; then
+    tar -xzvf "$archiveFile" -C "$extractDir" > /dev/null
+  fi
+  #解压后删除压缩包
+  if test "$archiveFile" != "$zipFileName"; then
+    rm "$archiveDirName/$archiveZipName"
+    mv "$archiveDirName/$archiveFileName" "$archiveDirName/$archiveZipName"
+  else
+    archiveZipName=$archiveFileName
+  fi
+  #搜索压缩包，并递归处理
+  for file in $(find "$archiveDirName/$archiveZipName" -type f | grep -E "(${support_ext})\$"); do
+    zdecompress "$file"
+  done
 }
 
 # 工具安装和初始化
