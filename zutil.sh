@@ -252,33 +252,51 @@ function zexec_main() {
   cd - &> /dev/null
 }
 
-zipFileName=zzj-service-1.0.0-SNAPSHOT.war
+# 压缩包全解压（不包括.jar|.war）
 function zdecompress() {
+  local support_ext=".zip|.tar|.tar.gz"
+  local support_ext=${support_ext//\./\\.}
+  out_zip_file="$1"
+  _zdecompress "$out_zip_file" "$support_ext"
+}
 
+# 压缩包全解压（包括.jar|.war）
+function zdecompressAll() {
+  local support_ext=".zip|.tar|.tar.gz|.jar|.war"
+  local support_ext=${support_ext//\./\\.}
+  out_zip_file="$1"
+  _zdecompress "$out_zip_file" "$support_ext"
+}
+
+function _zdecompress() {
   echo "$1"
-  local archiveFile="$1"
-  local archiveZipName=$(basename "$archiveFile")
-  local archiveFileName=$(basename "$archiveFile" | perl -pe "s#${support_ext}\$##g")
-  [ "$archiveFile" != "$zipFileName" ] && archiveFileName="${archiveFileName}_1"
-  local archiveDirName=$(dirname "$archiveFile")
-  mkdir -p "$archiveDirName/$archiveFileName"
+  local archive_file="$1"
+  local support_ext="$2"
+  local archive_file_name=$(basename "$archive_file")
+  local archive_file_name_no_ext=$(basename "$archive_file" | perl -pe "s#${support_ext}\$##g")
+  local archive_file_parent=$(dirname "$archive_file")
+  mkdir -p "$archive_file_parent/$archive_file_name_no_ext"
   #解压命令
-  local extractDir="$archiveDirName/$archiveFileName"
-  if [[ "$archiveFile" == *.zip ]] || [[ "$archiveFile" == *.jar ]] || [[ "$archiveFile" == *.war ]]; then
-    unzip -o "$archiveFile" -d "$extractDir" > /dev/null
-  elif [[ "$archiveFile" == *.tar.gz ]]; then
-    tar -xzvf "$archiveFile" -C "$extractDir" > /dev/null
+  local extract_dir="$archive_file_parent/$archive_file_name_no_ext"
+  if [[ "$archive_file" == *.zip ]] || [[ "$archive_file" == *.jar ]] || [[ "$archive_file" == *.war ]]; then
+    unzip -o "$archive_file" -d "$extract_dir" > /dev/null
+  elif [[ "$archive_file" == *.tar.gz ]]; then
+    tar -xzvf "$archive_file" -C "$extract_dir" > /dev/null
+  elif [[ "$archive_file" == *.tar ]]; then
+    tar -xvf "$archive_file" -C "$extract_dir" > /dev/null
   fi
   #解压后删除压缩包
-  if test "$archiveFile" != "$zipFileName"; then
-    rm "$archiveDirName/$archiveZipName"
-    mv "$archiveDirName/$archiveFileName" "$archiveDirName/$archiveZipName"
+  if [ "$archive_file" != "$out_zip_file" ]; then
+    rm "$archive_file_parent/$archive_file_name"
+    mv "$archive_file_parent/$archive_file_name_no_ext" "$archive_file_parent/$archive_file_name"
   else
-    archiveZipName=$archiveFileName
+    #最外层压缩包不删除
+    archive_file_name=$archive_file_name_no_ext
   fi
   #搜索压缩包，并递归处理
-  for file in $(find "$archiveDirName/$archiveZipName" -type f | grep -E "(${support_ext})\$"); do
-    zdecompress "$file"
+  local file
+  for file in $(find "$archive_file_parent/$archive_file_name" -type f | grep -E "(${support_ext})\$"); do
+    _zdecompress "$file" "$support_ext"
   done
 }
 
