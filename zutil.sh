@@ -252,6 +252,10 @@ function zexec_main() {
   cd - &> /dev/null
 }
 
+function zexcel_to_txt() {
+  zexec_main com.zzj.main.ExcelToText $(readlink -m $1)
+}
+
 # 压缩包全解压（不包括.jar|.war）
 function zdecompress() {
   local support_ext=".zip|.tar|.tar.gz"
