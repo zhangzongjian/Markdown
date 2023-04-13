@@ -161,6 +161,7 @@ function zssh() {
 function zdownload() {
   [ $# == 0 ] &&  zhelp "zdownload" && return
   local file_path=$1
+  [ ! -f "${file_path}" ] && echo "File is not exist." && return
   local file_new_name=$2
   local file_name=$(basename ${file_path})
   [ -n "${file_new_name}" ] && file_name=${file_new_name}
@@ -253,7 +254,7 @@ function zexec_main() {
 }
 
 function zexcel_to_txt() {
-  zexec_main com.zzj.main.ExcelToText $(readlink -m $1)
+  zexec_main com.zzj.main.ExcelToTxt $(readlink -m $1)
 }
 
 # 压缩包全解压（不包括.jar|.war）
