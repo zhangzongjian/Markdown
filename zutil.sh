@@ -2,7 +2,7 @@
 
 # 更新本工具
 function zupdate() {
-  wget http://192.168.1.5:8008/D%3A/IdeaProjects/Markdown/zutil.sh -O $zutil.tmp
+  wget http://192.168.1.4:8008/D%3A/IdeaProjects/Markdown/zutil.sh -O $zutil.tmp
   if [ $(wc -l < $zutil.tmp) -ne 0 ]; then
     set -x
     mv $zutil.tmp ${zutil}
@@ -59,7 +59,7 @@ function _get_opts() {
 # zjad test.jar Main.class      # 反编译jar包里的某个class
 function zjad() {
   trap "rm -rf /tmp/jad_tmp /tmp/cfr-0.144.jar" RETURN SIGQUIT
-  wget http://192.168.1.5:8008/D%3A/opt/cfr-0.144.jar -O /tmp/cfr-0.144.jar &> /dev/null
+  wget http://192.168.1.4:8008/D%3A/opt/cfr-0.144.jar -O /tmp/cfr-0.144.jar &> /dev/null
   PATH=$PATH:$(dirname $(ps -ef | grep -Eo "/[^ ]*/bin/java" | grep -Fv "*" | head -1))
   if [ $# -eq 2 ] && [[ $1 =~ \.jar$ ]]; then
     local jar_file=$1
@@ -94,12 +94,12 @@ function zget() {
     local target
     for target in "$@"; do
       [ -d "${target}" ] && target="${target}/${file_name}"
-      wget http://192.168.1.5:8008/${file_path} -O "${target}"
+      wget http://192.168.1.4:8008/${file_path} -O "${target}"
     done
   elif [[ "$1" =~ ^/ ]]; then # zget target_path
     zget $(basename $1) $1
   else  # zget win_file_path
-    wget http://192.168.1.5:8008/${file_path} -O "${file_name}"
+    wget http://192.168.1.4:8008/${file_path} -O "${file_name}"
   fi
 }
 
@@ -160,24 +160,18 @@ function zssh() {
 # zdownload /tmp/test.txt new_name      # 上传文件到ftp根目录，并重命名文件
 function zdownload() {
   [ $# == 0 ] &&  zhelp "zdownload" && return
-  local file_path=$1
+  file_path=$1
   [ ! -f "${file_path}" ] && echo "File is not exist." && return
-  local file_new_name=$2
-  local file_name=$(basename ${file_path})
+  file_new_name=$2
+  file_name=$(basename ${file_path})
   [ -n "${file_new_name}" ] && file_name=${file_new_name}
   # 通过文件服务上传
-  if curl -X POST http://192.168.1.5:8080/upload -F "file=@${file_path}" -F "name=${file_name}" 2> /dev/null; then
-    echo "Download finish. (${file_name})"
-    return
-  fi
-  # 通过ftp上传文件，需windows开启ftp服务
-  which ftp > /dev/null || return
-  echo "open 192.168.1.5
-  user ftpuser ftp123
-  binary
-  hash
-  put ${file_path} ${file_name}
-  quit" | ftp -n
+  #  if curl -X POST http://192.168.1.4:8080/uploadx -F "file=@${file_path}" -F "name=${file_name}" 2> /dev/null; then
+  #    echo "Download finish. (${file_name})"
+  #    return
+  #  fi
+  # 通过ftp上传文件，需开启ftp服务
+  curl -u 'ftpuser:ftp123' ftp://192.168.1.4:21/${file_name} -# -T ${file_path}
   echo "Download finish. (${file_name})"
 }
 
@@ -218,7 +212,6 @@ function zfind() {
     local grep_str=$2
     shift 2
     local cmd="find $(pwd)/ -name \"$name\" | xargs grep --color -n \"${grep_str}\" $@"
-    echo "$cmd"
     eval "$cmd"
     return
   fi
@@ -230,7 +223,6 @@ function zfind() {
     [[ "${ext}" =~ "-ls" ]] && ext=${ext//"-ls"/}" -exec ls -lh {} +"
     [[ "${ext}" =~ "-cd" ]] && ext=${ext//"-cd"/"-type d"} && is_cd=true
     local cmd="find $(pwd)/ -name \"$name\" $ext"
-    echo "$cmd"
     local result=$(eval "$cmd")
     [ -n "${result}" ] && echo "${result}"
     r=$(echo "${result}" | tail -1)
@@ -243,7 +235,7 @@ function zfind() {
 function zexec_main() {
   local run_path=/tmp/zzj/zzj-service
   local war_path=/tmp/zzj/zzj-service-1.0.0-SNAPSHOT.war
-  wget http://192.168.1.5:8008/D%3A/IdeaProjects/zzj-service/target/zzj-service-1.0.0-SNAPSHOT.war -O ${war_path} &> /dev/null
+  wget http://192.168.1.4:8008/D%3A/IdeaProjects/zzj-service/target/zzj-service-1.0.0-SNAPSHOT.war -O ${war_path} &> /dev/null
   unzip -o ${war_path} -d ${run_path} &> /dev/null
   cd ${run_path}
   PATH=$PATH:$(dirname $(ps -ef | grep -Eo "/[^ ]*/bin/java" | grep -Fv "*" | head -1) 2> /dev/null)
